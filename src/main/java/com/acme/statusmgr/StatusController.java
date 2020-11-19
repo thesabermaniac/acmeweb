@@ -3,10 +3,8 @@ package com.acme.statusmgr;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.acme.statusmgr.beans.ServerStatus;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.acme.statusmgr.beans.*;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller for all web/REST requests about the status of servers
@@ -32,15 +30,35 @@ public class StatusController {
     protected static final String template = "Server Status requested by %s";
     protected final AtomicLong counter = new AtomicLong();
 
-
-    
-    @RequestMapping("/status")
-    public ServerStatus getServerStatus(@RequestParam(value="name", defaultValue="Anonymous") String name, @RequestParam(required = false) List<String> details) {
-        if(details != null) {
-            System.out.println("*** DEBUG INFO *** ");
-            details.forEach(System.out::println);
-        }
+    @RequestMapping(value = "/status")
+    public ServerStatusInterface getServerStatus(@RequestParam(value="name", defaultValue="Anonymous") String name, @RequestParam(required = false) List<String> details) {
         return new ServerStatus(counter.incrementAndGet(),
-                            String.format(template, name));
+                String.format(template, name));
+    }
+
+
+    @RequestMapping(value = "/status/detailed")
+    @ExceptionHandler({IllegalParameterException.class})
+    public ServerStatusInterface getServerStatusDetailed(@RequestParam(value="name", defaultValue="Anonymous") String name, @RequestParam List<String> details){
+        ServerStatusInterface status = new ServerStatus(counter.incrementAndGet(),
+                String.format(template, name));
+        System.out.println("*** DEBUG INFO *** ");
+        details.forEach(System.out::println);
+        for(String s:details){
+            switch (s) {
+                case "extensions":
+                    status = new Extensions(status);
+                    break;
+                case "memory":
+                    status = new Memory(status);
+                    break;
+                case "operations":
+                    status = new Operations(status);
+                    break;
+                default:
+                    throw new IllegalParameterException("Invalid details option: " + s);
+            }
+        }
+        return status;
     }
 }

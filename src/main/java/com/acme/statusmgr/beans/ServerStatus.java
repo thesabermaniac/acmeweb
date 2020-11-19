@@ -5,7 +5,7 @@ import com.acme.servermgr.ServerManager;
 /**
  * A POJO that represents Server Status and can be used to generate JSON for that status
  */
-public class ServerStatus {
+public class ServerStatus implements ServerStatusInterface{
 
     private  long id;
     private String contentHeader;
@@ -40,7 +40,7 @@ public class ServerStatus {
         return contentHeader;
     }
 
-
+    @Override
     public String getStatusDesc() {
         return statusDesc;
     }
